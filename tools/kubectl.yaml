@@ -1,0 +1,34 @@
+tools:
+  - name: kubectl_cli
+    image: bitnami/kubectl
+    description: >
+      Runs any Kubernetes commands using the `kubectl` binary.
+    alias: kubectl
+    content: |
+      set -eu
+      TOKEN_LOCATION="/tmp/kubernetes_context_token"
+      CERT_LOCATION="/tmp/kubernetes_context_cert"
+      # Inject in-cluster context using the temporary token file
+      if [ -f $TOKEN_LOCATION ] && [ -f $CERT_LOCATION ]; then
+          KUBE_TOKEN=$(cat $TOKEN_LOCATION)
+          kubectl config set-cluster in-cluster --server=https://kubernetes.default.svc \
+                                                --certificate-authority=$CERT_LOCATION
+          kubectl config set-credentials in-cluster --token=$KUBE_TOKEN
+          kubectl config set-context in-cluster --cluster=in-cluster --user=in-cluster
+          kubectl config use-context in-cluster
+      else
+          echo "Error: Kubernetes context token or cert file not found at $TOKEN_LOCATION \
+                or $CERT_LOCATION respectively."
+          exit 1
+      fi
+      kubectl {{.command}}
+    args:
+      - name: command
+        description: >
+          The Kubernetes CLI command to run. Do not use `kubectl`, only enter its command.
+        required: true
+    with_files:
+      - source: /var/run/secrets/kubernetes.io/serviceaccount/token
+        destination: /tmp/kubernetes_context_token
+      - source: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        destination: /tmp/kubernetes_context_cert
