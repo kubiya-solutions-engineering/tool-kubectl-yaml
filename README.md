@@ -9,6 +9,16 @@ used by Kubiya Teammates to access Kubernetes using CLI commands.
 
 Nil except having a Kubernetes cluster to host your Kubiya Teammates and Tool Manager.
 
+Note that you may need to create a ClusterRoleBinding to connect to the underlying Kubernetes
+cluster. The following is an example of what that could look like, note that it does provide
+elevated rights.
+
+```bash
+kubectl create clusterrolebinding kubiya-service-account-access \
+  --clusterrole=cluster-admin \
+  --serviceaccount=kubiya:kubiya-service-account
+```
+
 ## Uploading the tool as a new Source
 
 1. Navigate to the Kubiya Web App, [app.kubiya.ai](https://app.kubiya.ai). Login if needed.
